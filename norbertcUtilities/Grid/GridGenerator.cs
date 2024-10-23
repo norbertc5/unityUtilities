@@ -1,16 +1,20 @@
 using UnityEngine;
+using UnityEngine.UI;
 
-namespace norbertcUtilities.Grid
+namespace norbertcUtilities.GridGenerator
 {
-    public class Grid : MonoBehaviour
+    public class GridGenerator : MonoBehaviour
     {
         [SerializeField] private GameObject cellPrefab;
-        [SerializeField] private int width;
-        [SerializeField] private int height;
+        public int width;
+        public int height;
         [SerializeField] private Color color1;
         [SerializeField] private Color color2;
 
-        void Awake()
+        enum BoardColorMode  { chessBoard, stripes };
+        [SerializeField] BoardColorMode boardColorMode;
+
+        protected virtual void Awake()
         {
             // generates grid
 
@@ -26,15 +30,48 @@ namespace norbertcUtilities.Grid
                     newCell.name = $"Cell ({x}, {y})";
                     position.x += cellPrefab.transform.localScale.x;
 
+                    if(IsCellUI(newCell, out Image img))
+                    {
+                        newCell.GetComponent<RectTransform>().anchoredPosition = position;
+                    }
+
                     // set colors like in chessboard
-                    if ((y + x) % 2 == 0)
-                        newCell.transform.GetChild(0).GetComponent<SpriteRenderer>().color = color1;
-                    else
-                        newCell.transform.GetChild(0).GetComponent<SpriteRenderer>().color = color2;
+                    if(boardColorMode == BoardColorMode.chessBoard)
+                    {
+                        if ((y + x) % 2 == 0)
+                            SetCellColor(newCell, img, color1);
+                        else
+                            SetCellColor(newCell, img, color2);
+                    }
+                    else if(boardColorMode == BoardColorMode.stripes)  // set color like stripes
+                    {
+                        if (y % 2 == 0)
+                            SetCellColor(newCell, img, color1);
+                        else
+                            SetCellColor(newCell, img, color2);
+                    }
                 }
                 position.y += cellPrefab.transform.localScale.y;
                 position.x = -(width * cellPrefab.transform.localScale.x - cellPrefab.transform.localScale.x) / 2;
             }
+        }
+
+        bool IsCellUI(GameObject cell, out Image img)
+        {
+            img = cell.GetComponentInChildren<Image>();
+            if(img)
+                return true;
+            else 
+                return false;
+
+        }
+
+        void SetCellColor(GameObject cell, Image img, Color color)
+        {
+            if (img)
+                img.color = color;
+            else
+                cell.GetComponentInChildren<SpriteRenderer>().color = color;
         }
     }
 }
